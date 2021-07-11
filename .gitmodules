@@ -1,0 +1,6 @@
+[submodule "social-client"]
+	path = social-client
+	url = https://github.com/niranjan2399/Social-Era-Client
+[submodule "client"]
+	path = client
+	url = https://github.com/niranjan2399/Social-Era-Client
