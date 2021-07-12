@@ -30,7 +30,14 @@ router.get("/timeline/:id", async (req, res) => {
 });
 
 // get profile posts
-// router.get('/profile')
+router.get("/profile/:id", async (req, res) => {
+  try {
+    const profilePosts = await Post.find({ userId: req.params.id });
+    res.json(profilePosts);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
 
 // update a post
 router.put("/:id", async (req, res) => {
