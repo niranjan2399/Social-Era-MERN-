@@ -1,6 +1,8 @@
 const router = require("express").Router();
 const Post = require("../models/Post");
 const User = require("../models/User");
+const fs = require("fs");
+const path = require("path");
 
 // create a post
 router.post("/", async (req, res) => {
@@ -52,7 +54,6 @@ router.put("/:id", async (req, res) => {
         .json({ message: "You don't have right to update this post" });
     }
   } catch (err) {
-    console.log(err);
     res.status(500).json(err);
   }
 });
@@ -60,8 +61,19 @@ router.put("/:id", async (req, res) => {
 // delete a post
 router.delete("/:id", async (req, res) => {
   const post = await Post.findById(req.params.id);
+  const image = post.img;
+  console.log(post.img);
   try {
     if (post.userId.equals(req.body.userId)) {
+      if (image) {
+        fs.unlink(path.join("public/images", image), (err) => {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log("Deleted file");
+          }
+        });
+      }
       await post.deleteOne();
       res.status(200).json({ message: "post has been deleted" });
     } else {

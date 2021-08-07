@@ -52,7 +52,6 @@ router.get("/:id", async (req, res) => {
     const { password, updatedAt, ...other } = user._doc;
     res.status(200).json(other);
   } catch (err) {
-    console.log(err);
     res.status(500).json({ message: err });
   }
 });
@@ -106,8 +105,8 @@ router.get("/friends/:id", async (req, res) => {
     );
     const data = [];
     followings.map((following) => {
-      const { _id, firstName, profilePicture } = following;
-      data.push({ _id, firstName, profilePicture });
+      const { _id, firstName, lastName, profilePicture } = following;
+      data.push({ _id, firstName, profilePicture, lastName });
     });
     res.json(data);
   } catch (err) {
