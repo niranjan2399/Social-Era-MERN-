@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { ObjectId } = mongoose.Schema;
 
 const UserSchema = new mongoose.Schema(
   {
@@ -31,7 +32,20 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    // friends �
+    notifications: {
+      type: Number,
+      default: 0,
+    },
+    friends: [
+      {
+        type: ObjectId,
+      },
+    ],
+    friendRequests: [
+      {
+        type: ObjectId,
+      },
+    ],
     followers: {
       type: Array,
       default: [],
@@ -52,16 +66,24 @@ const UserSchema = new mongoose.Schema(
       type: String,
       max: 10,
     },
-    from: {
-      type: String,
-      max: 50,
-    },
     relationship: {
-      type: Number,
-      enum: [1, 2, 3],
+      type: String,
+      enum: ["Single", "Committed", "Complicated"],
     },
+    bookmarks: [
+      {
+        type: ObjectId,
+        ref: "post",
+      },
+    ],
   },
   { timestamps: true }
 );
+
+UserSchema.index({
+  firstName: "text",
+  lastName: "text",
+  email: "text",
+});
 
 module.exports = mongoose.model("user", UserSchema);

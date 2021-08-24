@@ -2,8 +2,22 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
+const { verifyToken } = require("../middlewares/verifyToken");
 
-// update user
+router.use(verifyToken);
+
+// controllers
+const {
+  addBookmark,
+  removeBookmark,
+  suggestFriends,
+  sendFriendRequest,
+  removeFriendRequest,
+  addFriend,
+  removeFriend,
+} = require("../controllers/user");
+
+// update user details
 router.put("/:id", async (req, res) => {
   if (req.body.userId === req.params.id || req.body.isAdmin) {
     if (req.body.password) {
@@ -56,62 +70,37 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// follow user
-router.put("/:id/follow", async (req, res) => {
-  if (req.params.id !== req.body.userId) {
-    try {
-      const user = await User.findById(req.params.id);
-      const currentUser = await User.findById(req.body.userId);
-      if (!currentUser.following.includes(req.params.id)) {
-        await user.updateOne({ $push: { followers: req.body.userId } });
-        await currentUser.updateOne({ $push: { following: req.params.id } });
-        res.status(200).json({ message: "User followed" });
-      } else {
-        res.status(403).json({ message: "You already follow this user" });
-      }
-    } catch {}
-  } else {
-    res.status(500).json({ message: "You cannot follow Yourself" });
-  }
-});
-
-// unfollow user
-router.put("/:id/unfollow", async (req, res) => {
-  if (req.params.id !== req.body.userId) {
-    try {
-      const user = await User.findById(req.params.id);
-      const currentUser = await User.findById(req.body.userId);
-      if (currentUser.following.includes(req.params.id)) {
-        await user.updateOne({ $pull: { followers: req.body.userId } });
-        await currentUser.updateOne({ $pull: { following: req.params.id } });
-        res.status(200).json({ message: "User unfollowed" });
-      } else {
-        res.status(403).json({ message: "You don't follow this user" });
-      }
-    } catch {}
-  } else {
-    res.status(500).json({ message: "You cannot unfollow Yourself" });
-  }
-});
-
 // get friends
 router.get("/friends/:id", async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
-    const followings = await Promise.all(
-      user.following.map((following) => {
-        return User.findById(following);
-      })
-    );
+    const { friends } = await User.findById(req.params.id)
+      .select("friends")
+      .populate("friends");
+
     const data = [];
-    followings.map((following) => {
-      const { _id, firstName, lastName, profilePicture } = following;
+    friends.map((friend) => {
+      const { _id, firstName, lastName, profilePicture } = friend;
       data.push({ _id, firstName, profilePicture, lastName });
     });
+
     res.json(data);
   } catch (err) {
+    console.log(err);
     res.status(500).json(err);
   }
 });
+
+// handle friend / unfriend
+router.put("/send-friend-request/:id", sendFriendRequest);
+router.put("/remove-friend-request/:id", removeFriendRequest);
+router.put("/add-friend/:id", addFriend);
+router.put("/remove-friend/:id", removeFriend);
+
+// handle bookmarks
+router.put("/add-bookmark/:id", addBookmark);
+router.put("/remove-bookmark/:id", removeBookmark);
+
+// get all users
+router.get("/suggestions/:id", suggestFriends);
 
 module.exports = router;

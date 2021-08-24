@@ -1,5 +1,8 @@
 const router = require("express").Router();
+const { verifyToken } = require("../middlewares/verifyToken");
 const Message = require("../models/Message");
+
+router.use(verifyToken);
 
 router.post("/", async (req, res) => {
   const message = new Message(req.body);

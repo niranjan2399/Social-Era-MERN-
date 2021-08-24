@@ -14,6 +14,7 @@ const messageRoute = require("./routes/message");
 require("./config/dbConfig.js");
 const app = express();
 const PORT = process.env.PORT || 5000;
+const cors = require("cors");
 
 // middlewares
 app.use(express.json());
@@ -21,6 +22,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(helmet());
 app.use(morgan("common"));
 app.use("/images", express.static(path.join(__dirname, "public/images")));
+
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {

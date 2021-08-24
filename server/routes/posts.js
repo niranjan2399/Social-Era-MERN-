@@ -3,6 +3,9 @@ const Post = require("../models/Post");
 const User = require("../models/User");
 const fs = require("fs");
 const path = require("path");
+const { verifyToken } = require("../middlewares/verifyToken");
+
+router.use(verifyToken);
 
 // create a post
 router.post("/", async (req, res) => {
@@ -21,8 +24,8 @@ router.get("/timeline/:id", async (req, res) => {
     const user = await User.findById(req.params.id);
     const userPosts = await Post.find({ userId: user._id });
     const friendsPosts = await Promise.all(
-      user.following.map((followedUser) => {
-        return Post.find({ userId: followedUser });
+      user.friends.map((friend) => {
+        return Post.find({ userId: friend });
       })
     );
     res.status(200).json(userPosts.concat(...friendsPosts));

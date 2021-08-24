@@ -1,7 +1,14 @@
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
+
 const express = require("express");
 const router = express.Router();
-const User = require("../models/User");
+const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const JWT_SECRET = process.env.JWT;
+
+const User = require("../models/User");
 
 // register
 router.post("/register", async (req, res) => {
@@ -31,16 +38,28 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const user = await User.findOne({ email: req.body.email });
-    !user && res.status(404).json({ message: "user not found" });
+    if (!user) {
+      return res.status(404).json({ message: "user not found" });
+    }
 
     const validatePassword = await bcrypt.compare(
       req.body.password,
       user.password
     );
-    !validatePassword && res.status(400).json({ message: "wrong password" });
+    if (!validatePassword) {
+      return res.status(400).json({ message: "wrong password" });
+    }
 
-    res.status(200).json(user);
+    const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET);
+
+    res
+      .cookie("token", token, {
+        maxAge: 24 * 60 * 60 * 1000,
+        httpOnly: true,
+      })
+      .json(user);
   } catch (err) {
+    console.log(err);
     res.status(500).json(err);
   }
 });
