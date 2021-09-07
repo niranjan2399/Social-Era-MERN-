@@ -5,9 +5,12 @@ exports.sendFriendRequest = async (req, res) => {
   const friendId = req.params.id;
 
   try {
-    const friend = await User.findOneAndUpdate(friendId, {
-      $addToSet: { friendRequests: userId },
-    });
+    const friend = await User.findOneAndUpdate(
+      { _id: friendId },
+      {
+        $addToSet: { friendRequests: userId },
+      }
+    );
 
     res.json({ ok: true });
   } catch (err) {
@@ -21,9 +24,12 @@ exports.removeFriendRequest = async (req, res) => {
   const friendId = req.params.id;
 
   try {
-    const friend = await User.findOneAndUpdate(friendId, {
-      $pull: { friendRequests: userId },
-    });
+    const friend = await User.findOneAndUpdate(
+      { _id: userId },
+      {
+        $pull: { friendRequests: friendId },
+      }
+    );
 
     res.json({ ok: true });
   } catch (err) {
@@ -40,10 +46,10 @@ exports.addFriend = async (req, res) => {
     const user = await User.findByIdAndUpdate(userId, {
       $addToSet: { friends: friendId },
     });
-    const friend = await User.findOneAndUpdate(friendId, {
+    const friend = await User.findByIdAndUpdate(friendId, {
       $addToSet: { friends: userId },
     });
-    res.json({ ok: true });
+    res.json({ ok: true, friend });
   } catch (err) {
     res.status(400).json(err);
     console.log(err);
@@ -58,10 +64,11 @@ exports.removeFriend = async (req, res) => {
     const user = await User.findByIdAndUpdate(userId, {
       $pull: { friends: friendId },
     });
-    const friend = await User.findOneAndUpdate(friendId, {
+    const friend = await User.findByIdAndUpdate(friendId, {
       $pull: { friends: userId },
     });
-    res.json({ ok: true });
+
+    res.json({ ok: true, friend });
   } catch (err) {
     res.status(400).json(err);
     console.log(err);
@@ -117,6 +124,17 @@ exports.suggestFriends = async (req, res) => {
     res.json(friends);
   } catch (err) {
     console.log(err);
+    res.status(400).json(err);
+  }
+};
+
+exports.getBookmarks = async (req, res) => {
+  try {
+    const { bookmarks } = await User.findOne({ _id: req.params.id }).populate(
+      "bookmarks"
+    );
+    res.json(bookmarks);
+  } catch (err) {
     res.status(400).json(err);
   }
 };

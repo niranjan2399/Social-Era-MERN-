@@ -10,6 +10,7 @@ router.use(verifyToken);
 const {
   addBookmark,
   removeBookmark,
+  getBookmarks,
   suggestFriends,
   sendFriendRequest,
   removeFriendRequest,
@@ -97,6 +98,7 @@ router.put("/add-friend/:id", addFriend);
 router.put("/remove-friend/:id", removeFriend);
 
 // handle bookmarks
+router.get("/bookmarks/:id", getBookmarks);
 router.put("/add-bookmark/:id", addBookmark);
 router.put("/remove-bookmark/:id", removeBookmark);
 

@@ -22,14 +22,21 @@ router.post("/", async (req, res) => {
 router.get("/timeline/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-    const userPosts = await Post.find({ userId: user._id });
+    const userPosts = await Post.find({ userId: user._id }).populate(
+      "userId",
+      "firstName lastName profilePicture"
+    );
     const friendsPosts = await Promise.all(
       user.friends.map((friend) => {
-        return Post.find({ userId: friend });
+        return Post.find({ userId: friend }).populate(
+          "userId",
+          "firstName lastName profilePicture"
+        );
       })
     );
     res.status(200).json(userPosts.concat(...friendsPosts));
   } catch (err) {
+    console.log(err);
     res.status(500).json(err);
   }
 });
@@ -37,7 +44,10 @@ router.get("/timeline/:id", async (req, res) => {
 // get profile posts
 router.get("/profile/:id", async (req, res) => {
   try {
-    const profilePosts = await Post.find({ userId: req.params.id });
+    const profilePosts = await Post.find({ userId: req.params.id }).populate(
+      "userId",
+      "firstName lastName profilePicture"
+    );
     res.json(profilePosts);
   } catch (err) {
     res.status(500).json(err);
@@ -65,7 +75,7 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   const post = await Post.findById(req.params.id);
   const image = post.img;
-  console.log(post.img);
+
   try {
     if (post.userId.equals(req.body.userId)) {
       if (image) {
