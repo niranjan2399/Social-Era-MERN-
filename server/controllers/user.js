@@ -131,7 +131,13 @@ exports.suggestFriends = async (req, res) => {
 exports.getBookmarks = async (req, res) => {
   try {
     const { bookmarks } = await User.findOne({ _id: req.params.id }).populate(
-      "bookmarks"
+      // "bookmarks",
+      {
+        path: "bookmarks",
+        populate: {
+          path: "userId",
+        },
+      }
     );
     res.json(bookmarks);
   } catch (err) {
