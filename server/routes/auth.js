@@ -6,7 +6,9 @@ const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const JWT_SECRET = process.env.JWT;
+const fs = require("fs");
+const path = require("path");
+const JWT_PRIVATE_KEY = fs.readFileSync(path.resolve("jwtRSA256-private.pem"));
 
 const User = require("../models/User");
 
@@ -26,8 +28,35 @@ router.post("/register", async (req, res) => {
       gender: req.body.gender,
     });
 
-    await newUser.save();
-    res.send("user created");
+    const user = await newUser.save();
+    
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      JWT_PRIVATE_KEY,
+      {
+        algorithm: "RS256",
+        expiresIn: "1m",
+      }
+    );
+
+    const refreshToken = jwt.sign({ id: user._id }, JWT_PRIVATE_KEY, {
+      algorithm: "RS256",
+      expiresIn: "5d",
+    });
+
+    res.cookie("token", token, {
+      maxAge: 60 * 1000,
+      httpOnly: true,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      maxAge: 432000000,
+      httpOnly: true,
+    });
+
+    const { password, ...data } = user._doc;
+
+    res.json(data);
   } catch (err) {
     res.status(500).json(err);
     console.log(err);
@@ -40,7 +69,6 @@ router.post("/login", async (req, res) => {
     let user = await User.findOne({ email: req.body.email }).populate(
       "friendRequests"
     );
-    console.log(user);
     if (!user) {
       return res.status(404).json({ message: "user not found" });
     }
@@ -53,17 +81,45 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "wrong password" });
     }
 
-    const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET);
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      JWT_PRIVATE_KEY,
+      {
+        algorithm: "RS256",
+        expiresIn: "1m",
+      }
+    );
 
-    res
-      .cookie("token", token, {
-        maxAge: 24 * 60 * 60 * 1000,
-        httpOnly: true,
-      })
-      .json(user);
+    const refreshToken = jwt.sign({ id: user._id }, JWT_PRIVATE_KEY, {
+      algorithm: "RS256",
+      expiresIn: "5d",
+    });
+
+    res.cookie("token", token, {
+      maxAge: 60 * 1000,
+      httpOnly: true,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      maxAge: 432000000,
+      httpOnly: true,
+    });
+
+    // res.json(user);
+    const { password, ...data } = user._doc;
+    res.json(data);
   } catch (err) {
-    console.log(err);
     res.status(500).json(err);
+  }
+});
+
+router.delete("/logout/:id", (req, res) => {
+  try {
+    res.cookie("token", "", -1);
+    res.cookie("refreshToken", "", -1);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json(err);
   }
 });
 

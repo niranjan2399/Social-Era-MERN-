@@ -3,22 +3,25 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 const jwt = require("jsonwebtoken");
-const JWT_SECRET = process.env.JWT;
+const fs = require("fs");
+const path = require("path");
+const JWT_PRIVATE_KEY = fs.readFileSync(path.resolve("jwtRSA256-private.pem"));
 
 exports.verifyToken = (req, res, next) => {
-  const token = req.headers.cookie.split("=")[1];
-
-  if (!token) {
-    return res.status(403).send("A token is required for authentication");
+  // const { token } = req.cookies;
+  if (req.headers.cookie.includes("token")) {
+  } else {
   }
+
+  const token = req.headers.cookie.split(";")[0].split("=")[1];
+
   try {
-    const decoded = jwt.verify(token, JWT_SECRET, {
-      algorithms: ["HS256"],
+    const decoded = jwt.verify(token, JWT_PRIVATE_KEY, {
+      algorithms: ["RS256"],
     });
     req.user = decoded;
   } catch (err) {
     return res.status(401).send("Invalid Token");
-    console.log(err);
   }
   return next();
 };
