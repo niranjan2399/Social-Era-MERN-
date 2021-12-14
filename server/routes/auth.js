@@ -14,6 +14,7 @@ const User = require("../models/User");
 
 // register
 router.post("/register", async (req, res) => {
+
   try {
     //   hashing passwords
     const salt = await bcrypt.genSalt(10);
@@ -29,7 +30,7 @@ router.post("/register", async (req, res) => {
     });
 
     const user = await newUser.save();
-    
+
     const token = jwt.sign(
       { id: user._id, email: user.email },
       JWT_PRIVATE_KEY,

@@ -144,3 +144,19 @@ exports.getBookmarks = async (req, res) => {
     res.status(400).json(err);
   }
 };
+
+exports.searchUser = async (req, res) => {
+  const { query } = req.body;
+
+  try {
+    // const users = await User.find({ $text: { $search: query } });
+    const regex = new RegExp(query, "i");
+    const users = await User.find({
+      $or: [{ firstName: regex }, { lastName: regex }, { email: regex }],
+    });
+    res.json(users);
+  } catch (err) {
+    console.log(err);
+    res.status(400).json(err);
+  }
+};

@@ -16,6 +16,7 @@ const {
   removeFriendRequest,
   addFriend,
   removeFriend,
+  searchUser,
 } = require("../controllers/user");
 
 router.get("/current-user", async (req, res) => {
@@ -37,9 +38,13 @@ router.put("/:id", async (req, res) => {
       }
     }
     try {
-      const user = await User.findByIdAndUpdate(req.params.id, {
-        $set: req.body,
-      }).populate("friendRequests");
+      const user = await User.findByIdAndUpdate(
+        req.params.id,
+        {
+          $set: req.body,
+        },
+        { new: true }
+      ).populate("friendRequests");
 
       const { password, ...data } = user._doc;
 
@@ -114,5 +119,8 @@ router.put("/remove-bookmark/:id", removeBookmark);
 
 // get all users
 router.get("/suggestions/:id", suggestFriends);
+
+// search users
+router.post("/search-users", searchUser);
 
 module.exports = router;
